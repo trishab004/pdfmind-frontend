@@ -181,95 +181,82 @@
   </footer>
 
   <script>
-    let summaryText = "";
-    const BACKEND_URL = "https://pdfmind-backend-fy4f.onrender.com"; // replace this
+let summaryText = "";
+const BACKEND_URL = "https://pdfmind-backend-fy4f.onrender.com"; // your backend URL
 
-    async function uploadPDF() {
-      const file = document.getElementById("pdfUpload").files[0];
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const res = await fetch(`${BACKEND_URL}/summarize`, {
-        method: "POST",
-        body: formData
-      });
-
-      const data = await res.json();
-      summaryText = data.summary;
-      document.getElementById("summary").innerText = summaryText;
-    }
-
-    function downloadSummary() {
-      const blob = new Blob([summaryText], { type: 'text/plain' });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = "summary.txt";
-      link.click();
-    }
-
-    async function askQuestion() {
-      const question = document.getElementById("userQuestion").value;
-      document.getElementById("chatbox").innerHTML += `<div class="user">${question}</div>`;
-
-      const res = await fetch(`${BACKEND_URL}/ask`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: question })
-      });
-
-      const data = await res.json();
-      document.getElementById("chatbox").innerHTML += `<div class="bot">${data.answer}</div>`;
-      document.getElementById("userQuestion").value = "";
-    }
-
-    function toggleTheme() {
-      const currentTheme = document.documentElement.getAttribute("data-theme");
-      const newTheme = currentTheme === "dark" ? "light" : "dark";
-      document.documentElement.setAttribute("data-theme", newTheme);
-      document.querySelector(".toggle-icon").textContent = newTheme === "dark" ? "☀️" : "🌙";
-    }
-
-
-
-
-
-
-    async function uploadPDF() {
+async function uploadPDF() {
   const file = document.getElementById("pdfUpload").files[0];
+  if (!file) {
+    alert("Please select a PDF file first.");
+    return;
+  }
   const formData = new FormData();
   formData.append("file", file);
 
   document.getElementById("summary").innerText = "⏳ Summarizing your document...";
-  
-  const res = await fetch(`${BACKEND_URL}/summarize`, {
-    method: "POST",
-    body: formData
-  });
 
-  const data = await res.json();
-  summaryText = data.summary;
-  document.getElementById("summary").innerText = summaryText;
+  try {
+    const res = await fetch(`${BACKEND_URL}/summarize`, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+    summaryText = data.summary;
+    document.getElementById("summary").innerText = summaryText;
+  } catch (error) {
+    document.getElementById("summary").innerText = "⚠️ Error summarizing document.";
+    console.error(error);
+  }
 }
 
+function downloadSummary() {
+  if (!summaryText) {
+    alert("No summary available to download.");
+    return;
+  }
+  const blob = new Blob([summaryText], { type: 'text/plain' });
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.download = "summary.txt";
+  link.click();
+}
 
-    async function askQuestion() {
-  const question = document.getElementById("userQuestion").value;
+async function askQuestion() {
+  const question = document.getElementById("userQuestion").value.trim();
+  if (!question) {
+    alert("Please enter a question.");
+    return;
+  }
   const chatbox = document.getElementById("chatbox");
 
   chatbox.innerHTML += `<div class="user">${question}</div>`;
   chatbox.innerHTML += `<div class="bot">🤔 Thinking...</div>`;
 
-  const res = await fetch(`${BACKEND_URL}/ask`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question: question })
-  });
+  try {
+    const res = await fetch(`${BACKEND_URL}/ask`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: question })
+    });
 
-  const data = await res.json();
-  // Replace the "thinking..." message with real answer
-  chatbox.lastChild.innerHTML = data.answer;
+    const data = await res.json();
+    // Replace the "thinking..." message with real answer
+    chatbox.lastChild.innerHTML = data.answer;
+  } catch (error) {
+    chatbox.lastChild.innerHTML = "⚠️ Error getting answer.";
+    console.error(error);
+  }
   document.getElementById("userQuestion").value = "";
 }
+
+function toggleTheme() {
+  const currentTheme = document.documentElement.getAttribute("data-theme");
+  const newTheme = currentTheme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  document.querySelector(".toggle-icon").textContent = newTheme === "dark" ? "☀️" : "🌙";
+}
+
 
   </script>
 </body>
