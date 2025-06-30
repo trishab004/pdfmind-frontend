@@ -182,7 +182,7 @@
 
   <script>
     let summaryText = "";
-    const BACKEND_URL = "https://pdfmind-backend.onrender.com"; // replace this
+    const BACKEND_URL = "https://pdfmind-backend-fy4f.onrender.com"; // replace this
 
     async function uploadPDF() {
       const file = document.getElementById("pdfUpload").files[0];
@@ -228,6 +228,49 @@
       document.documentElement.setAttribute("data-theme", newTheme);
       document.querySelector(".toggle-icon").textContent = newTheme === "dark" ? "☀️" : "🌙";
     }
+
+
+
+
+
+
+    async function uploadPDF() {
+  const file = document.getElementById("pdfUpload").files[0];
+  const formData = new FormData();
+  formData.append("file", file);
+
+  document.getElementById("summary").innerText = "⏳ Summarizing your document...";
+  
+  const res = await fetch(`${BACKEND_URL}/summarize`, {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+  summaryText = data.summary;
+  document.getElementById("summary").innerText = summaryText;
+}
+
+
+    async function askQuestion() {
+  const question = document.getElementById("userQuestion").value;
+  const chatbox = document.getElementById("chatbox");
+
+  chatbox.innerHTML += `<div class="user">${question}</div>`;
+  chatbox.innerHTML += `<div class="bot">🤔 Thinking...</div>`;
+
+  const res = await fetch(`${BACKEND_URL}/ask`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ question: question })
+  });
+
+  const data = await res.json();
+  // Replace the "thinking..." message with real answer
+  chatbox.lastChild.innerHTML = data.answer;
+  document.getElementById("userQuestion").value = "";
+}
+
   </script>
 </body>
 </html>
